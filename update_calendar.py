@@ -5,9 +5,9 @@ from datetime import datetime, timedelta
 from icalendar import Calendar, Event
 
 # --- [설정] ---
-NX, NY = 60, 127
-LOCATION_NAME = "봉화산로 193"
-REG_ID_TEMP = '11B10101'
+NX, NY = 54, 129
+LOCATION_NAME = "우리집"
+REG_ID_TEMP = '11B20102'
 REG_ID_LAND = '11B00000'
 API_KEY = os.environ.get('KMA_API_KEY')
 
