@@ -7,8 +7,8 @@ from icalendar import Calendar, Event
 # --- [1. 설정] ---
 NX, NY = 60, 127
 LOCATION_NAME = "봉화산로 193"
-REG_ID_TEMP = '11B10101'  # 서울 기온 구역
-REG_ID_LAND = '11B00000'  # 서울/경인 육상 구역
+REG_ID_TEMP = '11B10101'
+REG_ID_LAND = '11B00000'
 API_KEY = os.environ.get('KMA_API_KEY')
 
 def get_emoji(wf_or_sky, pty='0'):
@@ -37,7 +37,7 @@ def main():
     cal.add('X-WR-CALNAME', '기상청 날씨')
     cal.add('X-WR-TIMEZONE', 'Asia/Seoul')
 
-    # 1. 단기 예보 수집 (0~3.5일)
+    # 1. 단기 예보 수집
     base_date = now.strftime('%Y%m%d')
     base_h = max([h for h in [2, 5, 8, 11, 14, 17, 20, 23] if h <= now.hour], default=2)
     base_time = f"{base_h:02d}00"
@@ -53,7 +53,7 @@ def main():
             if t not in forecast_map[d]: forecast_map[d][t] = {}
             forecast_map[d][t][cat] = val
 
-    # 2. 중기 예보 수집 (4~10일)
+    # 2. 중기 예보 수집
     tm_fc = now.strftime('%Y%m%d') + ("0600" if now.hour < 18 else "1800")
     url_mid_temp = f"https://apihub.kma.go.kr/api/typ02/openApi/MidFcstInfoService/getMidTa?dataType=JSON&regId={REG_ID_TEMP}&tmFc={tm_fc}&authKey={API_KEY}"
     url_mid_land = f"https://apihub.kma.go.kr/api/typ02/openApi/MidFcstInfoService/getMidLandFcst?dataType=JSON&regId={REG_ID_LAND}&tmFc={tm_fc}&authKey={API_KEY}"
@@ -67,7 +67,6 @@ def main():
             l_item = mid_land_res['response']['body']['items']['item'][0]
             for i in range(4, 11):
                 d_str = (now + timedelta(days=i)).strftime('%Y%m%d')
-                # 8~10일은 오전/오후 구분이 없으므로 분기 처리
                 if i <= 7:
                     mid_map[d_str] = {
                         'min': t_item.get(f'taMin{i}'), 'max': t_item.get(f'taMax{i}'),
@@ -81,7 +80,7 @@ def main():
                     }
         except: pass
 
-    # 3. 캘린더 이벤트 생성 (0~10일)
+    # 3. 캘린더 이벤트 생성
     for i in range(11):
         target_dt = now + timedelta(days=i)
         d_str = target_dt.strftime('%Y%m%d')
@@ -99,12 +98,13 @@ def main():
             desc = [f"📍 {LOCATION_NAME}\n"]
             for t in times:
                 it = d[t]
-                desc.append(f"[{t[:2]}h] {get_emoji(it.get('SKY'), it.get('PTY'))} {it.get('TMP')}°C (☔{it.get('POP')}% 💧{it.get('REH')}% 💨{it.get('WSD')}m/s)")
+                # 시간 표기 수정: 09h -> 9시
+                display_time = f"{int(t[:2])}시"
+                desc.append(f"[{display_time}] {get_emoji(it.get('SKY'), it.get('PTY'))} {it.get('TMP')}°C (☔{it.get('POP')}% 💧{it.get('REH')}% 💨{it.get('WSD')}m/s)")
             event.add('description', "\n".join(desc))
             
         elif d_str in mid_map: # 중기 구간
             m = mid_map[d_str]
-            # 대표 이모지는 오후(Pm) 또는 일(wf) 기준
             rep_wf = m.get('wf_pm') or m.get('wf')
             event.add('summary', f"{get_emoji(rep_wf)} {m['min']}°C / {m['max']}°C")
             
@@ -123,7 +123,7 @@ def main():
 
     with open('weather.ics', 'wb') as f:
         f.write(cal.to_ical())
-    print("✅ 단기/중기 통합 업데이트 완료!")
+    print("✅ 시간 표기 수정 및 단기/중기 통합 완료!")
 
 if __name__ == "__main__":
     main()
