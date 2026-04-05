@@ -13,7 +13,6 @@ REG_ID_LAND = os.environ.get('REG_ID_LAND', '11B00000')
 API_KEY = os.environ.get('KMA_API_KEY')
 
 def get_weather_info(sky, pty):
-    """단기 예보 코드 판별"""
     sky, pty = str(sky), str(pty)
     if pty != '0':
         if pty in ['1', '4', '5']: return "🌧️", "비/소나기"
@@ -26,9 +25,9 @@ def get_weather_info(sky, pty):
     return "🌡️", "정보없음"
 
 def get_mid_emoji(wf):
-    """중기 예보 문자열 판별"""
     if not wf: return "🌡️"
-    if '비' in wf or '소나기' in wf or '적심' in wf: return "🌧️"
+    wf = wf.replace(" ", "")
+    if '비' in wf or '소나기' in wf: return "🌧️"
     if '눈' in wf or '진눈깨비' in wf: return "🌨️"
     if '구름많음' in wf: return "⛅"
     if '흐림' in wf: return "☁️"
@@ -45,12 +44,12 @@ def fetch_api(url):
 def main():
     seoul_tz = pytz.timezone('Asia/Seoul')
     now = datetime.now(seoul_tz)
+    update_ts = now.strftime('%Y-%m-%d %H:%M:%S')
     cal = Calendar()
-    # 요청사항: 달력 이름을 '기상청 날씨'로 고정 (로케이션 제거)
     cal.add('X-WR-CALNAME', '기상청 날씨')
     cal.add('X-WR-TIMEZONE', 'Asia/Seoul')
 
-    # --- [1. 단기 예보 수집] ---
+    # --- [1. 단기 예보 (오늘~3일)] ---
     base_date = now.strftime('%Y%m%d')
     base_h = max([h for h in [2, 5, 8, 11, 14, 17, 20, 23] if h <= now.hour], default=2)
     base_time = f"{base_h:02d}00"
@@ -66,50 +65,36 @@ def main():
             if t not in forecast_map[d]: forecast_map[d][t] = {}
             forecast_map[d][t][cat] = val
 
-    # --- [2. 단기 예보 조립] ---
-    update_ts = now.strftime('%Y-%m-%d %H:%M:%S') # 최종 업데이트 시간 생성
     short_limit = (now + timedelta(days=3)).strftime('%Y%m%d')
-    
     for d_str in sorted(forecast_map.keys()):
         if d_str > short_limit: continue
-        
         day_data = forecast_map[d_str]
         tmps = [float(day_data[t]['TMP']) for t in day_data if 'TMP' in day_data[t]]
         if not tmps: continue
-
         t_min, t_max = int(min(tmps)), int(max(tmps))
         rep_t = '1200' if '1200' in day_data else sorted(day_data.keys())[0]
         rep_emoji, _ = get_weather_info(day_data[rep_t].get('SKY','1'), day_data[rep_t].get('PTY','0'))
         
         event = Event()
-        event.add('summary', f"{rep_emoji} {t_min}°C/{t_max}°C") # 제목 (기존 유지)
-        event.add('location', LOCATION_NAME) # 위치 필드 (유지)
+        event.add('summary', f"{rep_emoji} {t_min}°C/{t_max}°C")
+        event.add('location', LOCATION_NAME)
         
-        description = []
+        desc = []
         for t_str in sorted(day_data.keys()):
             t_info = day_data[t_str]
             emoji, wf_str = get_weather_info(t_info['SKY'], t_info['PTY'])
-            temp = t_info['TMP']
-            reh = t_info.get('REH', '-')
-            wsd = t_info.get('WSD', '-')
-            pty = t_info.get('PTY', '0')
-            pop = t_info.get('POP', '0')
-            
+            temp, reh, wsd, pty, pop = t_info['TMP'], t_info.get('REH','-'), t_info.get('WSD','-'), t_info.get('PTY','0'), t_info.get('POP','0')
             pop_prefix = f"☔{pop}% " if pty != '0' else ""
-            line = f"[{t_str[:2]}시] {emoji} {wf_str} {temp}°C ({pop_prefix}💧{reh}%, 🚩{wsd}m/s)"
-            description.append(line)
+            desc.append(f"[{t_str[:2]}시] {emoji} {wf_str} {temp}°C ({pop_prefix}💧{reh}%, 🚩{wsd}m/s)")
         
-        # 메모 하단에 업데이트 시간 추가 (복구 완료)
-        description.append(f"\n최종 업데이트: {update_ts} (KST)")
-        event.add('description', "\n".join(description))
-        
+        desc.append(f"\n최종 업데이트: {update_ts} (KST)")
+        event.add('description', "\n".join(desc))
         event_date = datetime.strptime(d_str, '%Y%m%d').date()
-        event.add('dtstart', event_date)
-        event.add('dtend', event_date + timedelta(days=1))
+        event.add('dtstart', event_date); event.add('dtend', event_date + timedelta(days=1))
         event.add('uid', f"{d_str}@short_summary")
         cal.add_component(event)
 
-    # --- [3. 중기 예보 수집] ---
+    # --- [2. 중기 예보 (4일~10일)] ---
     tm_fc = now.strftime('%Y%m%d') + ("0600" if now.hour < 12 else "1800")
     url_mid_temp = f"https://apihub.kma.go.kr/api/typ02/openApi/MidFcstInfoService/getMidTa?dataType=JSON&regId={REG_ID_TEMP}&tmFc={tm_fc}&authKey={API_KEY}"
     url_mid_land = f"https://apihub.kma.go.kr/api/typ02/openApi/MidFcstInfoService/getMidLandFcst?dataType=JSON&regId={REG_ID_LAND}&tmFc={tm_fc}&authKey={API_KEY}"
@@ -117,20 +102,34 @@ def main():
     t_res, l_res = fetch_api(url_mid_temp), fetch_api(url_mid_land)
     if t_res and l_res:
         try:
-            t_item = t_res['response']['body']['items']['item'][0]
-            l_item = l_res['response']['body']['items']['item'][0]
+            t_items = t_res['response']['body']['items']['item'][0]
+            l_items = l_res['response']['body']['items']['item'][0]
             for i in range(4, 11):
                 d_target = (now + timedelta(days=i)).strftime('%Y%m%d')
                 event = Event()
-                wf = l_item.get(f'wf{i}Pm') or l_item.get(f'wf{i}') or ""
-                t_min, t_max = t_item.get(f'taMin{i}'), t_item.get(f'taMax{i}')
+                t_min, t_max = t_items.get(f'taMin{i}'), t_items.get(f'taMax{i}')
                 
-                event.add('summary', f"{get_mid_emoji(wf)} {wf} {t_min}/{t_max}°C")
+                mid_desc = []
+                # 4~7일차: 오전/오후 있음
+                if i <= 7:
+                    wf_am, wf_pm = l_items.get(f'wf{i}Am'), l_items.get(f'wf{i}Pm')
+                    rn_am, rn_pm = l_items.get(f'rnSt{i}Am'), l_items.get(f'rnSt{i}Pm')
+                    wf_rep = wf_pm
+                    mid_desc.append(f"[오전] {get_mid_emoji(wf_am)} {wf_am} (☔{rn_am}%)")
+                    mid_desc.append(f"[오후] {get_mid_emoji(wf_pm)} {wf_pm} (☔{rn_pm}%)")
+                # 8~10일차: 종일 데이터만 있음
+                else:
+                    wf_rep = l_items.get(f'wf{i}')
+                    rn_st = l_items.get(f'rnSt{i}')
+                    mid_desc.append(f"[종일] {get_mid_emoji(wf_rep)} {wf_rep} (☔{rn_st}%)")
+                
+                event.add('summary', f"{get_mid_emoji(wf_rep)} {wf_rep} {t_min}/{t_max}°C")
                 event.add('location', LOCATION_NAME)
-                # 중기 예보 메모에도 업데이트 시간 추가
-                event.add('description', f"최종 업데이트: {update_ts} (KST)")
-                event.add('dtstart', (now + timedelta(days=i)).date())
-                event.add('dtend', (now + timedelta(days=i+1)).date())
+                mid_desc.append(f"\n최종 업데이트: {update_ts} (KST)")
+                event.add('description', "\n".join(mid_desc))
+                
+                event_date = (now + timedelta(days=i)).date()
+                event.add('dtstart', event_date); event.add('dtend', event_date + timedelta(days=1))
                 event.add('uid', f"{d_target}@mid")
                 cal.add_component(event)
         except: pass
