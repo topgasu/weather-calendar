@@ -46,7 +46,8 @@ def main():
     seoul_tz = pytz.timezone('Asia/Seoul')
     now = datetime.now(seoul_tz)
     cal = Calendar()
-    cal.add('X-WR-CALNAME', f'기상청 날씨')
+    # 요청사항: 달력 이름을 '기상청 날씨'로 고정 (로케이션 제거)
+    cal.add('X-WR-CALNAME', '기상청 날씨')
     cal.add('X-WR-TIMEZONE', 'Asia/Seoul')
 
     # --- [1. 단기 예보 수집] ---
@@ -66,7 +67,9 @@ def main():
             forecast_map[d][t][cat] = val
 
     # --- [2. 단기 예보 조립] ---
+    update_ts = now.strftime('%Y-%m-%d %H:%M:%S') # 최종 업데이트 시간 생성
     short_limit = (now + timedelta(days=3)).strftime('%Y%m%d')
+    
     for d_str in sorted(forecast_map.keys()):
         if d_str > short_limit: continue
         
@@ -79,10 +82,8 @@ def main():
         rep_emoji, _ = get_weather_info(day_data[rep_t].get('SKY','1'), day_data[rep_t].get('PTY','0'))
         
         event = Event()
-        # 제목(Summary)은 깔끔하게 유지
-        event.add('summary', f"{rep_emoji} {t_min}°C/{t_max}°C")
-        # 위치(Location) 필드에 LOCATION_NAME 추가
-        event.add('location', LOCATION_NAME)
+        event.add('summary', f"{rep_emoji} {t_min}°C/{t_max}°C") # 제목 (기존 유지)
+        event.add('location', LOCATION_NAME) # 위치 필드 (유지)
         
         description = []
         for t_str in sorted(day_data.keys()):
@@ -98,6 +99,8 @@ def main():
             line = f"[{t_str[:2]}시] {emoji} {wf_str} {temp}°C ({pop_prefix}💧{reh}%, 🚩{wsd}m/s)"
             description.append(line)
         
+        # 메모 하단에 업데이트 시간 추가 (복구 완료)
+        description.append(f"\n최종 업데이트: {update_ts} (KST)")
         event.add('description', "\n".join(description))
         
         event_date = datetime.strptime(d_str, '%Y%m%d').date()
@@ -106,7 +109,7 @@ def main():
         event.add('uid', f"{d_str}@short_summary")
         cal.add_component(event)
 
-    # --- [3. 중기 예보 조립] ---
+    # --- [3. 중기 예보 수집] ---
     tm_fc = now.strftime('%Y%m%d') + ("0600" if now.hour < 12 else "1800")
     url_mid_temp = f"https://apihub.kma.go.kr/api/typ02/openApi/MidFcstInfoService/getMidTa?dataType=JSON&regId={REG_ID_TEMP}&tmFc={tm_fc}&authKey={API_KEY}"
     url_mid_land = f"https://apihub.kma.go.kr/api/typ02/openApi/MidFcstInfoService/getMidLandFcst?dataType=JSON&regId={REG_ID_LAND}&tmFc={tm_fc}&authKey={API_KEY}"
@@ -123,8 +126,9 @@ def main():
                 t_min, t_max = t_item.get(f'taMin{i}'), t_item.get(f'taMax{i}')
                 
                 event.add('summary', f"{get_mid_emoji(wf)} {wf} {t_min}/{t_max}°C")
-                # 중기 예보에도 위치 필드 추가
                 event.add('location', LOCATION_NAME)
+                # 중기 예보 메모에도 업데이트 시간 추가
+                event.add('description', f"최종 업데이트: {update_ts} (KST)")
                 event.add('dtstart', (now + timedelta(days=i)).date())
                 event.add('dtend', (now + timedelta(days=i+1)).date())
                 event.add('uid', f"{d_target}@mid")
