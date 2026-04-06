@@ -13,13 +13,7 @@ REG_ID_LAND = os.environ.get('REG_ID_LAND', '11B00000')
 API_KEY = os.environ['KMA_API_KEY']
 
 def get_weather_info(sky, pty):
-    """
-    기상청 단기예보 강수형태(PTY) 공식 코드 반영
-    0: 없음, 1: 비, 2: 비/눈, 3: 눈, 4: 소나기, 5: 빗방울, 6: 빗방울눈날림, 7: 눈날림
-    """
     sky, pty = str(sky), str(pty)
-    
-    # 1. 강수 형태가 있는 경우 (PTY != '0')
     if pty == '1': return "🌧️", "비"
     if pty == '2': return "🌨️", "비/눈(진눈깨비)"
     if pty == '3': return "❄️", "눈"
@@ -27,16 +21,12 @@ def get_weather_info(sky, pty):
     if pty == '5': return "💧", "빗방울"
     if pty == '6': return "🌨️", "빗방울/눈날림"
     if pty == '7': return "❄️", "눈날림"
-
-    # 2. 강수 형태가 없는 경우 (PTY == '0'), 하늘상태(SKY) 기준
     if sky == '1': return "☀️", "맑음"
     if sky == '3': return "⛅", "구름많음"
     if sky == '4': return "☁️", "흐림"
-    
     return "🌡️", "정보없음"
 
 def get_mid_emoji(wf):
-    """중기 예보 기상 상태(텍스트 기반) 판별"""
     if not wf: return "🌡️"
     wf = wf.replace(" ", "")
     if '소나기' in wf: return "☔"
@@ -67,7 +57,7 @@ def main():
     cal.add('X-WR-CALNAME', '기상청 날씨')
     cal.add('X-WR-TIMEZONE', 'Asia/Seoul')
 
-    # --- [2. 단기 예보 (오늘 ~ +3일)] ---
+    # --- [2. 단기 예보] ---
     base_date = now.strftime('%Y%m%d')
     base_h = max([h for h in [2, 5, 8, 11, 14, 17, 20, 23] if h <= now.hour], default=2)
     base_time = f"{base_h:02d}00"
@@ -91,39 +81,31 @@ def main():
 
     for d_str in sorted(forecast_map.keys()):
         if d_str > short_term_limit: continue
-
         day_data = forecast_map[d_str]
         tmps = [float(day_data[t]['TMP']) for t in day_data if 'TMP' in day_data[t]]
         if not tmps: continue
-        
         t_min, t_max = int(min(tmps)), int(max(tmps))
         rep_t = '1200' if '1200' in day_data else sorted(day_data.keys())[0]
         rep_emoji, _ = get_weather_info(day_data[rep_t].get('SKY', cache['SKY']), day_data[rep_t].get('PTY', cache['PTY']))
-        
         desc = []
         has_future_data = False
         for h in range(24):
             t_str = f"{h:02d}00"
             event_time = seoul_tz.localize(datetime.strptime(f"{d_str}{t_str}", '%Y%m%d%H%M'))
-            
             if t_str in day_data:
                 for cat in cache.keys():
                     if cat in day_data[t_str]: cache[cat] = day_data[t_str][cat]
-            
             if event_time >= now:
                 emoji, wf_str = get_weather_info(cache['SKY'], cache['PTY'])
                 rain_icon = "☔" if cache['PTY'] != '0' else "💧"
                 desc.append(f"[{t_str[:2]}시] {emoji} {wf_str} {cache['TMP']}°C ({rain_icon}{cache['POP']}% 습도{cache['REH']}% 풍속{cache['WSD']}m/s)")
                 has_future_data = True
-        
         if not has_future_data: continue
-
         event = Event()
         event.add('summary', f"{rep_emoji} {t_min}°C/{t_max}°C")
         event.add('location', LOCATION_NAME)
         desc.append(f"\n최종 업데이트: {update_ts} (KST)")
         event.add('description', "\n".join(desc))
-        
         event_date = datetime.strptime(d_str, '%Y%m%d').date()
         event.add('dtstart', event_date)
         event.add('dtend', event_date + timedelta(days=1))
@@ -131,35 +113,30 @@ def main():
         cal.add_component(event)
         processed_dates.add(d_str)
 
-    # --- [3. 중기 예보 (경계면 누락 방지를 위한 수정)] ---
+    # --- [3. 중기 예보 수정: tmFc 기준 날짜 계산] ---
     if now.hour < 6:
-        tm_fc = (now - timedelta(days=1)).strftime('%Y%m%d') + "1800"
+        tm_fc_dt = (now - timedelta(days=1)).replace(hour=18, minute=0, second=0)
     elif now.hour < 18:
-        tm_fc = now.strftime('%Y%m%d') + "0600"
+        tm_fc_dt = now.replace(hour=6, minute=0, second=0)
     else:
-        tm_fc = now.strftime('%Y%m%d') + "1800"
+        tm_fc_dt = now.replace(hour=18, minute=0, second=0)
+    
+    tm_fc = tm_fc_dt.strftime('%Y%m%d%H%M')
 
     url_mid_temp = f"https://apihub.kma.go.kr/api/typ02/openApi/MidFcstInfoService/getMidTa?dataType=JSON&regId={REG_ID_TEMP}&tmFc={tm_fc}&authKey={API_KEY}"
     url_mid_land = f"https://apihub.kma.go.kr/api/typ02/openApi/MidFcstInfoService/getMidLandFcst?dataType=JSON&regId={REG_ID_LAND}&tmFc={tm_fc}&authKey={API_KEY}"
     
     t_res, l_res = fetch_api(url_mid_temp), fetch_api(url_mid_land)
     
-    if not (t_res and l_res) and tm_fc.endswith("1800"):
-        tm_fc = now.strftime('%Y%m%d') + "0600"
-        url_mid_temp = f"https://apihub.kma.go.kr/api/typ02/openApi/MidFcstInfoService/getMidTa?dataType=JSON&regId={REG_ID_TEMP}&tmFc={tm_fc}&authKey={API_KEY}"
-        url_mid_land = f"https://apihub.kma.go.kr/api/typ02/openApi/MidFcstInfoService/getMidLandFcst?dataType=JSON&regId={REG_ID_LAND}&tmFc={tm_fc}&authKey={API_KEY}"
-        t_res, l_res = fetch_api(url_mid_temp), fetch_api(url_mid_land)
-
     if t_res and l_res:
         try:
             t_items = t_res['response']['body']['items']['item'][0]
             l_items = l_res['response']['body']['items']['item'][0]
-            # range 범위를 2부터 시작하여 단기 예보가 끝나는 지점의 누락을 방지합니다.
-            for i in range(2, 11):
-                d_target_dt = now + timedelta(days=i)
+            # API 필드 번호 i (3~10)는 tmFc 날짜를 기준으로 i일 후를 의미함
+            for i in range(3, 11):
+                d_target_dt = tm_fc_dt + timedelta(days=i)
                 d_target_str = d_target_dt.strftime('%Y%m%d')
                 
-                # 단기 예보에서 이미 처리된 날짜는 건너뜁니다.
                 if d_target_str in processed_dates: continue
                 
                 t_min, t_max = t_items.get(f'taMin{i}'), t_items.get(f'taMax{i}')
@@ -183,7 +160,6 @@ def main():
                 event.add('location', LOCATION_NAME)
                 mid_desc.append(f"\n최종 업데이트: {update_ts} (KST)")
                 event.add('description', "\n".join(mid_desc))
-                
                 event_date = d_target_dt.date()
                 event.add('dtstart', event_date)
                 event.add('dtend', event_date + timedelta(days=1))
