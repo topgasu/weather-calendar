@@ -108,7 +108,7 @@ def main():
             forecast_map[d][t][cat] = val
 
     cache = {'TMP': '15', 'SKY': '1', 'PTY': '0', 'REH': '50', 'WSD': '1.0', 'POP': '0'}
-    short_term_limit = (now + timedelta(days=3)).strftime('%Y%m%d')
+    short_term_limit = (now + timedelta(days=4)).strftime('%Y%m%d')  # 3 → 4
 
     for d_str in sorted(forecast_map.keys()):
         if d_str > short_term_limit: continue
@@ -187,7 +187,6 @@ def main():
                 if d_target_str in processed_dates: continue
                 if d_target_str < now.strftime('%Y%m%d'): continue
 
-                # tm_fc_dt 기준 실제 API 필드 번호 계산
                 field_i = (d_target_dt.date() - tm_fc_dt.date()).days
 
                 t_min = t_items.get(f'taMin{field_i}')
