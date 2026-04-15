@@ -224,6 +224,8 @@ def main():
             t_res, l_res, tm_fc_dt = t_try, l_try, candidate
             break
 
+    print(f"[DEBUG] tm_fc_dt={tm_fc_dt}, processed_dates={sorted(processed_dates)}")
+    
     if t_res and l_res and tm_fc_dt:
         try:
             t_items = t_res['response']['body']['items']['item'][0]
