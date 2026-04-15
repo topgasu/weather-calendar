@@ -40,17 +40,12 @@ def get_mid_emoji(wf):
 def fetch_api(url):
     try:
         res = requests.get(url, timeout=15)
-        print(f"[DEBUG] HTTP {res.status_code} | {url[:100]}")
         if res.status_code == 200:
             data = res.json()
-            rc = data.get('response', {}).get('header', {}).get('resultCode')
-            rm = data.get('response', {}).get('header', {}).get('resultMsg')
-            print(f"[DEBUG] resultCode={rc}, resultMsg={rm}")
-            if rc == '00':
+            if data.get('response', {}).get('header', {}).get('resultCode') == '00':
                 return data
         return None
-    except Exception as e:
-        print(f"[DEBUG] fetch 예외: {e} | {url[:100]}")
+    except:
         return None
 
 def get_base_datetime(now):
@@ -67,7 +62,6 @@ def get_base_datetime(now):
 def get_tmfc_candidates(now):
     candidates = []
     effective_now = now - timedelta(minutes=30)
-
     if effective_now.hour < 6:
         c1 = (effective_now - timedelta(days=1)).replace(hour=18, minute=0, second=0, microsecond=0)
         c2 = (effective_now - timedelta(days=2)).replace(hour=18, minute=0, second=0, microsecond=0)
@@ -77,110 +71,90 @@ def get_tmfc_candidates(now):
     else:
         c1 = effective_now.replace(hour=18, minute=0, second=0, microsecond=0)
         c2 = effective_now.replace(hour=6, minute=0, second=0, microsecond=0)
-
     candidates.append(c1)
     candidates.append(c2)
-    print(f"[DEBUG] tmfc_candidates={[c.strftime('%Y%m%d%H%M') for c in candidates]}")
     return candidates
 
-def make_short_ampm_event(d_str, day_data, update_ts, location):
-    am_hours = [f"{h:02d}00" for h in range(6, 12)]
-    pm_hours = [f"{h:02d}00" for h in range(12, 18)]
+def load_cached_events(ics_path):
+    """기존 weather.ics에서 날짜별 이벤트를 raw 바이트로 캐싱"""
+    cache = {}
+    if not os.path.exists(ics_path):
+        return cache
+    try:
+        with open(ics_path, 'rb') as f:
+            cal = Calendar.from_ical(f.read())
+        for component in cal.walk():
+            if component.name == 'VEVENT':
+                dtstart = component.get('dtstart')
+                if dtstart:
+                    d = dtstart.dt
+                    if hasattr(d, 'strftime'):
+                        d_str = d.strftime('%Y%m%d')
+                        cache[d_str] = component.to_ical()
+    except:
+        pass
+    return cache
 
-    def rep_slot(hours):
-        tmps, pops, skies, ptys = [], [], [], []
-        for t in hours:
-            if t in day_data:
-                td = day_data[t]
-                if 'TMP' in td: tmps.append(float(td['TMP']))
-                if 'POP' in td: pops.append(int(td['POP']))
-                if 'SKY' in td: skies.append(td['SKY'])
-                if 'PTY' in td: ptys.append(td['PTY'])
-        if not tmps:
-            return None
-        pty_rep = max(set(ptys), key=ptys.count) if ptys else '0'
-        sky_rep = max(set(skies), key=skies.count) if skies else '1'
-        emoji, wf_str = get_weather_info(sky_rep, pty_rep)
-        pop_max = max(pops) if pops else 0
-        return emoji, wf_str, pop_max
-
-    am = rep_slot(am_hours)
-    pm = rep_slot(pm_hours)
-    if not am and not pm:
-        return None
-
-    all_tmps = [float(day_data[t]['TMP']) for t in day_data if 'TMP' in day_data[t]]
-    if not all_tmps:
-        return None
-    t_min, t_max = int(min(all_tmps)), int(max(all_tmps))
-
-    rep_emoji = (pm or am)[0]
-
-    mid_desc = []
-    if am:
-        mid_desc.append(f"[오전] {am[0]} {am[1]} (☔{am[2]}%)")
-    if pm:
-        mid_desc.append(f"[오후] {pm[0]} {pm[1]} (☔{pm[2]}%)")
-    mid_desc.append(f"\n최종 업데이트: {update_ts} (KST)")
-
-    event = Event()
-    event.add('summary', f"{rep_emoji} {t_min}°C/{t_max}°C")
-    event.add('location', location)
-    event.add('description', "\n".join(mid_desc))
-    event_date = datetime.strptime(d_str, '%Y%m%d').date()
-    event.add('dtstart', event_date)
-    event.add('dtend', event_date + timedelta(days=1))
-    event.add('uid', f"{d_str}@short_ampm")
-    return event
+def event_from_cache(raw_ical):
+    """raw 바이트에서 VEVENT 객체를 새로 파싱해서 반환"""
+    try:
+        wrapped = b"BEGIN:VCALENDAR\r\nVERSION:2.0\r\n" + raw_ical + b"\r\nEND:VCALENDAR"
+        cal = Calendar.from_ical(wrapped)
+        for component in cal.walk():
+            if component.name == 'VEVENT':
+                return component
+    except:
+        pass
+    return None
 
 def main():
     seoul_tz = pytz.timezone('Asia/Seoul')
     now = datetime.now(seoul_tz)
+    today_str = now.strftime('%Y%m%d')
     update_ts = now.strftime('%Y-%m-%d %H:%M:%S')
-    print(f"[DEBUG] now={now.strftime('%Y-%m-%d %H:%M:%S %Z')}")
+
+    today_dt = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    short_end_str = (today_dt + timedelta(days=3)).strftime('%Y%m%d')  # D+0~D+3 단기
+    mid_start_dt  = today_dt + timedelta(days=4)                        # D+4부터 중기
+    mid_end_dt    = today_dt + timedelta(days=10)                       # D+10까지
 
     cal = Calendar()
     cal.add('X-WR-CALNAME', '기상청 날씨')
     cal.add('X-WR-TIMEZONE', 'Asia/Seoul')
+    processed_dates = set()
 
-    # --- [2. 단기 예보] ---
+    # --- [2. 기존 캐시 로드] ---
+    cached_events = load_cached_events('weather.ics')
+
+    # --- [3. 단기 예보: D+0 ~ D+3 시간별 상세] ---
     base_date, base_time = get_base_datetime(now)
-    print(f"[DEBUG] 단기 base_date={base_date}, base_time={base_time}")
-
     url_short = (
         f"https://apihub.kma.go.kr/api/typ02/openApi/VilageFcstInfoService_2.0/getVilageFcst"
         f"?dataType=JSON&base_date={base_date}&base_time={base_time}"
         f"&nx={NX}&ny={NY}&numOfRows=1000&authKey={API_KEY}"
     )
-
     forecast_map = {}
     short_res = fetch_api(url_short)
-    processed_dates = set()
-
     if short_res and 'body' in short_res['response']:
-        items = short_res['response']['body']['items']['item']
-        for it in items:
+        for it in short_res['response']['body']['items']['item']:
             d, t, cat, val = it['fcstDate'], it['fcstTime'], it['category'], it['fcstValue']
             if d not in forecast_map: forecast_map[d] = {}
             if t not in forecast_map[d]: forecast_map[d][t] = {}
             forecast_map[d][t][cat] = val
-        print(f"[DEBUG] 단기 forecast_map dates={sorted(forecast_map.keys())}")
-    else:
-        print(f"[DEBUG] 단기 예보 응답 없음 또는 실패")
 
     cache = {'TMP': '15', 'SKY': '1', 'PTY': '0', 'REH': '50', 'WSD': '1.0', 'POP': '0'}
-    short_term_limit = (now + timedelta(days=3)).strftime('%Y%m%d')
-    day4_str = (now + timedelta(days=4)).strftime('%Y%m%d')
-    day5_str = (now + timedelta(days=5)).strftime('%Y%m%d')
-
     for d_str in sorted(forecast_map.keys()):
-        if d_str > short_term_limit: continue
+        if d_str < today_str or d_str > short_end_str:
+            continue
         day_data = forecast_map[d_str]
         tmps = [float(day_data[t]['TMP']) for t in day_data if 'TMP' in day_data[t]]
         if not tmps: continue
         t_min, t_max = int(min(tmps)), int(max(tmps))
         rep_t = '1200' if '1200' in day_data else sorted(day_data.keys())[0]
-        rep_emoji, _ = get_weather_info(day_data[rep_t].get('SKY', cache['SKY']), day_data[rep_t].get('PTY', cache['PTY']))
+        rep_emoji, _ = get_weather_info(
+            day_data[rep_t].get('SKY', cache['SKY']),
+            day_data[rep_t].get('PTY', cache['PTY'])
+        )
         desc = []
         has_future_data = False
         for h in range(24):
@@ -196,9 +170,7 @@ def main():
                     details.append(f"☔{cache['POP']}%")
                 details.append(f"💧{cache['REH']}%")
                 details.append(f"🚩{cache['WSD']}m/s")
-                details_str = " ".join(details)
-                line = f"[{t_str[:2]}시] {emoji} {wf_str} {cache['TMP']}°C ({details_str})"
-                desc.append(line)
+                desc.append(f"[{t_str[:2]}시] {emoji} {wf_str} {cache['TMP']}°C ({' '.join(details)})")
                 has_future_data = True
         if not has_future_data: continue
         event = Event()
@@ -206,22 +178,26 @@ def main():
         event.add('location', LOCATION_NAME)
         desc.append(f"\n최종 업데이트: {update_ts} (KST)")
         event.add('description', "\n".join(desc))
-        event_date = datetime.strptime(d_str, '%Y%m%d').date()
-        event.add('dtstart', event_date)
-        event.add('dtend', event_date + timedelta(days=1))
+        event.add('dtstart', datetime.strptime(d_str, '%Y%m%d').date())
+        event.add('dtend', datetime.strptime(d_str, '%Y%m%d').date() + timedelta(days=1))
         event.add('uid', f"{d_str}@short_summary")
         cal.add_component(event)
         processed_dates.add(d_str)
 
-    print(f"[DEBUG] 단기 처리 완료 processed_dates={sorted(processed_dates)}")
+    # 단기 API 실패시 D+0~D+3 캐시 재사용
+    for delta in range(4):
+        d_str = (today_dt + timedelta(days=delta)).strftime('%Y%m%d')
+        if d_str not in processed_dates and d_str in cached_events:
+            event = event_from_cache(cached_events[d_str])
+            if event:
+                cal.add_component(event)
+                processed_dates.add(d_str)
 
-    # --- [3. 중기 예보] ---
+    # --- [4. 중기 예보: D+4 ~ D+10] ---
     tmfc_candidates = get_tmfc_candidates(now)
-
     t_res, l_res, tm_fc_dt = None, None, None
     for candidate in tmfc_candidates:
         tm_fc_str = candidate.strftime('%Y%m%d%H%M')
-        print(f"[DEBUG] 중기 후보 시도: {tm_fc_str}")
         url_mid_temp = (
             f"https://apihub.kma.go.kr/api/typ02/openApi/MidFcstInfoService/getMidTa"
             f"?dataType=JSON&regId={REG_ID_TEMP}&tmFc={tm_fc_str}&authKey={API_KEY}"
@@ -232,46 +208,32 @@ def main():
         )
         t_try = fetch_api(url_mid_temp)
         l_try = fetch_api(url_mid_land)
-        print(f"[DEBUG] t_try={t_try is not None}, l_try={l_try is not None}")
         if t_try and l_try:
             t_res, l_res, tm_fc_dt = t_try, l_try, candidate
             break
 
-    print(f"[DEBUG] 최종 tm_fc_dt={tm_fc_dt}")
-
+    t_items, l_items = None, None
     if t_res and l_res and tm_fc_dt:
         try:
             t_items = t_res['response']['body']['items']['item'][0]
             l_items = l_res['response']['body']['items']['item'][0]
-            print(f"[DEBUG] t_items keys={list(t_items.keys())}")
-            print(f"[DEBUG] l_items keys={list(l_items.keys())}")
-        except (KeyError, IndexError, TypeError) as e:
-            print(f"[DEBUG] items 파싱 실패: {e}")
-            t_items, l_items = None, None
+        except (KeyError, IndexError, TypeError):
+            pass
 
-        if t_items and l_items:
-            for i in range(3, 11):
-                d_target_dt = tm_fc_dt + timedelta(days=i)
-                d_target_str = d_target_dt.strftime('%Y%m%d')
+    # D+4 ~ D+10 순서대로 채우기
+    cur_dt = mid_start_dt
+    while cur_dt <= mid_end_dt:
+        d_str = cur_dt.strftime('%Y%m%d')
+        event = None
 
-                if d_target_str in processed_dates: continue
-                if d_target_str < now.strftime('%Y%m%d'): continue
+        # 1순위: 새 중기 데이터
+        if t_items and l_items and tm_fc_dt:
+            field_i = (cur_dt.date() - tm_fc_dt.date()).days
+            t_min = t_items.get(f'taMin{field_i}')
+            t_max = t_items.get(f'taMax{field_i}')
+            wf_rep = l_items.get(f'wf{field_i}Pm') if field_i <= 7 else l_items.get(f'wf{field_i}')
 
-                field_i = (d_target_dt.date() - tm_fc_dt.date()).days
-
-                t_min = t_items.get(f'taMin{field_i}')
-                t_max = t_items.get(f'taMax{field_i}')
-                if t_min is None or t_max is None:
-                    print(f"[DEBUG] {d_target_str} taMin{field_i}/taMax{field_i} 없음, skip")
-                    continue
-
-                wf_rep = l_items.get(f'wf{field_i}Pm') if field_i <= 7 else l_items.get(f'wf{field_i}')
-                if wf_rep is None:
-                    print(f"[DEBUG] {d_target_str} wf{field_i} 없음, skip")
-                    continue
-
-                print(f"[DEBUG] 중기 이벤트 추가: {d_target_str} field_i={field_i}")
-                event = Event()
+            if t_min is not None and t_max is not None and wf_rep is not None:
                 mid_desc = []
                 if field_i <= 7:
                     wf_am = l_items.get(f'wf{field_i}Am')
@@ -281,30 +243,28 @@ def main():
                     mid_desc.append(f"[오전] {get_mid_emoji(wf_am)} {wf_am} (☔{rn_am}%)")
                     mid_desc.append(f"[오후] {get_mid_emoji(wf_pm)} {wf_pm} (☔{rn_pm}%)")
                 else:
-                    wf_rep_val = l_items.get(f'wf{field_i}')
-                    rn_st = l_items.get(f'rnSt{field_i}')
-                    mid_desc.append(f"[종일] {get_mid_emoji(wf_rep_val)} {wf_rep_val} (☔{rn_st}%)")
+                    wf_val = l_items.get(f'wf{field_i}')
+                    rn_st  = l_items.get(f'rnSt{field_i}')
+                    mid_desc.append(f"[종일] {get_mid_emoji(wf_val)} {wf_val} (☔{rn_st}%)")
+                mid_desc.append(f"\n최종 업데이트: {update_ts} (KST)")
 
+                event = Event()
                 event.add('summary', f"{get_mid_emoji(wf_rep)} {t_min}/{t_max}°C")
                 event.add('location', LOCATION_NAME)
-                mid_desc.append(f"\n최종 업데이트: {update_ts} (KST)")
                 event.add('description', "\n".join(mid_desc))
-                event_date = d_target_dt.date()
-                event.add('dtstart', event_date)
-                event.add('dtend', event_date + timedelta(days=1))
-                event.add('uid', f"{d_target_str}@mid")
-                cal.add_component(event)
-                processed_dates.add(d_target_str)
+                event.add('dtstart', cur_dt.date())
+                event.add('dtend', (cur_dt + timedelta(days=1)).date())
+                event.add('uid', f"{d_str}@mid")
 
-    # --- [4. 4~5일차 폴백] ---
-    for d_str in [day4_str, day5_str]:
-        if d_str not in processed_dates and d_str in forecast_map:
-            event = make_short_ampm_event(d_str, forecast_map[d_str], update_ts, LOCATION_NAME)
-            if event:
-                cal.add_component(event)
-                processed_dates.add(d_str)
+        # 2순위: 캐시 재사용
+        if event is None and d_str in cached_events:
+            event = event_from_cache(cached_events[d_str])
 
-    print(f"[DEBUG] 최종 processed_dates={sorted(processed_dates)}")
+        if event is not None:
+            cal.add_component(event)
+            processed_dates.add(d_str)
+
+        cur_dt += timedelta(days=1)
 
     with open('weather.ics', 'wb') as f:
         f.write(cal.to_ical())
