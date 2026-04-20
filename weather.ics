@@ -21,8 +21,8 @@ DESCRIPTION:[02시] ☀️ 맑음 5°C (💧75% 🚩1.2m/s)\n[03시] ☀
   15°C (💧40% 🚩3m/s)\n[20시] ⛅ 구름많음 14°C (💧45% 🚩2.4
  m/s)\n[21시] ⛅ 구름많음 12°C (💧55% 🚩2.4m/s)\n[22시] ⛅ 구
  름많음 11°C (💧60% 🚩1.7m/s)\n[23시] ⛅ 구름많음 10°C (💧
- 65% 🚩1.5m/s)\n\n최종 업데이트: 2026-04-21 01:19:10 (KST)
-LOCATION:용인
+ 65% 🚩1.5m/s)\n\n최종 업데이트: 2026-04-21 01:22:38 (KST)
+LOCATION:우리집
 END:VEVENT
 BEGIN:VEVENT
 SUMMARY:⛅ 6°C/19°C
@@ -46,8 +46,8 @@ DESCRIPTION:[00시] ⛅ 구름많음 9°C (💧70% 🚩1.6m/s)\n[01시]
   16°C (💧40% 🚩1.9m/s)\n[20시] ☀️ 맑음 14°C (💧45% 🚩1.4m
  /s)\n[21시] ⛅ 구름많음 12°C (💧50% 🚩0.8m/s)\n[22시] ☁️ 
  흐림 11°C (💧55% 🚩1m/s)\n[23시] ☁️ 흐림 10°C (💧55% 🚩
- 0.7m/s)\n\n최종 업데이트: 2026-04-21 01:19:10 (KST)
-LOCATION:용인
+ 0.7m/s)\n\n최종 업데이트: 2026-04-21 01:22:38 (KST)
+LOCATION:우리집
 END:VEVENT
 BEGIN:VEVENT
 SUMMARY:☁️ 7°C/20°C
@@ -71,8 +71,8 @@ DESCRIPTION:[00시] ⛅ 구름많음 9°C (💧60% 🚩0.2m/s)\n[01시]
  구름많음 15°C (💧45% 🚩3.2m/s)\n[21시] ☀️ 맑음 13°C (💧
  45% 🚩2.6m/s)\n[22시] ⛅ 구름많음 12°C (💧50% 🚩2m/s)\n[23시
  ] ☁️ 흐림 11°C (💧55% 🚩1.5m/s)\n\n최종 업데이트: 2026-04
- -21 01:19:10 (KST)
-LOCATION:용인
+ -21 01:22:38 (KST)
+LOCATION:우리집
 END:VEVENT
 BEGIN:VEVENT
 SUMMARY:☀️ 6°C/22°C
@@ -95,8 +95,8 @@ DESCRIPTION:[00시] ⛅ 구름많음 10°C (💧60% 🚩1.2m/s)\n[01시]
  21°C (💧35% 🚩1m/s)\n[20시] ☀️ 맑음 21°C (💧35% 🚩1m/s)\n
  [21시] ☀️ 맑음 14°C (💧50% 🚩1m/s)\n[22시] ☀️ 맑음 14°
  C (💧50% 🚩1m/s)\n[23시] ☀️ 맑음 14°C (💧50% 🚩1m/s)\n\n
- 최종 업데이트: 2026-04-21 01:19:10 (KST)
-LOCATION:용인
+ 최종 업데이트: 2026-04-21 01:22:38 (KST)
+LOCATION:우리집
 END:VEVENT
 BEGIN:VEVENT
 SUMMARY:☀️ 7/23°C
@@ -104,8 +104,8 @@ DTSTART;VALUE=DATE:20260425
 DTEND;VALUE=DATE:20260426
 UID:20260425@mid
 DESCRIPTION:[오전] ☀️ 맑음 (☔10%)\n[오후] ☀️ 맑음 (☔10
- %)\n\n최종 업데이트: 2026-04-21 01:19:10 (KST)
-LOCATION:용인
+ %)\n\n최종 업데이트: 2026-04-21 01:22:38 (KST)
+LOCATION:우리집
 END:VEVENT
 BEGIN:VEVENT
 SUMMARY:⛅ 7/24°C
@@ -113,8 +113,8 @@ DTSTART;VALUE=DATE:20260426
 DTEND;VALUE=DATE:20260427
 UID:20260426@mid
 DESCRIPTION:[오전] ☀️ 맑음 (☔10%)\n[오후] ⛅ 구름많음 (
- ☔30%)\n\n최종 업데이트: 2026-04-21 01:19:10 (KST)
-LOCATION:용인
+ ☔30%)\n\n최종 업데이트: 2026-04-21 01:22:38 (KST)
+LOCATION:우리집
 END:VEVENT
 BEGIN:VEVENT
 SUMMARY:☁️ 9/19°C
@@ -122,8 +122,8 @@ DTSTART;VALUE=DATE:20260427
 DTEND;VALUE=DATE:20260428
 UID:20260427@mid
 DESCRIPTION:[오전] 🌧️ 흐리고 비 (☔60%)\n[오후] ☁️ 흐
- 림 (☔40%)\n\n최종 업데이트: 2026-04-21 01:19:10 (KST)
-LOCATION:용인
+ 림 (☔40%)\n\n최종 업데이트: 2026-04-21 01:22:38 (KST)
+LOCATION:우리집
 END:VEVENT
 BEGIN:VEVENT
 SUMMARY:⛅ 8/19°C
@@ -131,8 +131,8 @@ DTSTART;VALUE=DATE:20260428
 DTEND;VALUE=DATE:20260429
 UID:20260428@mid
 DESCRIPTION:[종일] ⛅ 구름많음 (☔20%)\n\n최종 업데이트: 202
- 6-04-21 01:19:10 (KST)
-LOCATION:용인
+ 6-04-21 01:22:38 (KST)
+LOCATION:우리집
 END:VEVENT
 BEGIN:VEVENT
 SUMMARY:⛅ 8/20°C
@@ -140,8 +140,8 @@ DTSTART;VALUE=DATE:20260429
 DTEND;VALUE=DATE:20260430
 UID:20260429@mid
 DESCRIPTION:[종일] ⛅ 구름많음 (☔20%)\n\n최종 업데이트: 202
- 6-04-21 01:19:10 (KST)
-LOCATION:용인
+ 6-04-21 01:22:38 (KST)
+LOCATION:우리집
 END:VEVENT
 BEGIN:VEVENT
 SUMMARY:⛅ 9/21°C
@@ -149,7 +149,7 @@ DTSTART;VALUE=DATE:20260430
 DTEND;VALUE=DATE:20260501
 UID:20260430@mid
 DESCRIPTION:[종일] ⛅ 구름많음 (☔20%)\n\n최종 업데이트: 202
- 6-04-21 01:19:10 (KST)
-LOCATION:용인
+ 6-04-21 01:22:38 (KST)
+LOCATION:우리집
 END:VEVENT
 END:VCALENDAR
