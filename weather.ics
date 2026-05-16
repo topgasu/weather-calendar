@@ -2,23 +2,21 @@ BEGIN:VCALENDAR
 X-WR-CALNAME:기상청 날씨
 X-WR-TIMEZONE:Asia/Seoul
 BEGIN:VEVENT
-SUMMARY:☀️ 14°C/29°C
+SUMMARY:☀️ 18°C/29°C
 DTSTART;VALUE=DATE:20260516
 DTEND;VALUE=DATE:20260517
 UID:20260516@short_summary
-DESCRIPTION:[07시] ☀️ 맑음 16°C (💧85% 🚩0.2m/s)\n[08시] ☀
- ️ 맑음 19°C (💧75% 🚩0.1m/s)\n[09시] ☀️ 맑음 22°C (💧65
- % 🚩0.1m/s)\n[10시] ☀️ 맑음 24°C (💧55% 🚩0.1m/s)\n[11시] 
- ☀️ 맑음 26°C (💧45% 🚩0.5m/s)\n[12시] ☀️ 맑음 27°C (
- 💧35% 🚩0.8m/s)\n[13시] ☀️ 맑음 28°C (💧35% 🚩0.8m/s)\n[14
- 시] ☀️ 맑음 29°C (💧35% 🚩0.7m/s)\n[15시] ☀️ 맑음 29°C
-  (💧30% 🚩0.5m/s)\n[16시] ☀️ 맑음 29°C (💧35% 🚩0.1m/s)\n[
- 17시] ☀️ 맑음 28°C (💧35% 🚩0.6m/s)\n[18시] ☀️ 맑음 26
- °C (💧40% 🚩1.8m/s)\n[19시] ☀️ 맑음 24°C (💧45% 🚩1.8m/s)
- \n[20시] ☀️ 맑음 22°C (💧50% 🚩1.3m/s)\n[21시] ☀️ 맑음 
- 20°C (💧55% 🚩0.8m/s)\n[22시] ☀️ 맑음 19°C (💧55% 🚩1m/s)
- \n[23시] ☀️ 맑음 18°C (💧60% 🚩0.5m/s)\n\n최종 업데이트:
-  2026-05-16 06:17:31 (KST)
+DESCRIPTION:[10시] ☀️ 맑음 24°C (💧55% 🚩0.1m/s)\n[11시] ☀
+ ️ 맑음 26°C (💧45% 🚩0.5m/s)\n[12시] ☀️ 맑음 27°C (💧35
+ % 🚩0.8m/s)\n[13시] ☀️ 맑음 28°C (💧35% 🚩0.8m/s)\n[14시] 
+ ☀️ 맑음 29°C (💧35% 🚩0.7m/s)\n[15시] ☀️ 맑음 29°C (
+ 💧30% 🚩0.5m/s)\n[16시] ☀️ 맑음 29°C (💧35% 🚩0.1m/s)\n[17
+ 시] ☀️ 맑음 28°C (💧35% 🚩0.6m/s)\n[18시] ☀️ 맑음 26°C
+  (💧40% 🚩1.8m/s)\n[19시] ☀️ 맑음 24°C (💧45% 🚩1.8m/s)\n[
+ 20시] ☀️ 맑음 22°C (💧50% 🚩1.3m/s)\n[21시] ☀️ 맑음 20
+ °C (💧55% 🚩0.8m/s)\n[22시] ☀️ 맑음 19°C (💧55% 🚩1m/s)\n
+ [23시] ☀️ 맑음 18°C (💧60% 🚩0.5m/s)\n\n최종 업데이트: 2
+ 026-05-16 09:04:50 (KST)
 LOCATION:우리집
 END:VEVENT
 BEGIN:VEVENT
@@ -43,7 +41,7 @@ DESCRIPTION:[00시] ☀️ 맑음 17°C (💧60% 🚩0.1m/s)\n[01시] ☀
  맑음 21°C (💧45% 🚩1.2m/s)\n[21시] ☀️ 맑음 20°C (💧50% 
  🚩0.8m/s)\n[22시] ☀️ 맑음 19°C (💧55% 🚩0.6m/s)\n[23시] ☀
  ️ 맑음 18°C (💧55% 🚩0.5m/s)\n\n최종 업데이트: 2026-05-16 0
- 6:17:31 (KST)
+ 9:04:50 (KST)
 LOCATION:우리집
 END:VEVENT
 BEGIN:VEVENT
@@ -68,7 +66,7 @@ DESCRIPTION:[00시] ☀️ 맑음 17°C (💧60% 🚩0.8m/s)\n[01시] ☀
  름많음 22°C (💧50% 🚩1m/s)\n[21시] ⛅ 구름많음 20°C (💧50
  % 🚩0.8m/s)\n[22시] ☀️ 맑음 19°C (💧50% 🚩0.6m/s)\n[23시] 
  ☁️ 흐림 18°C (💧55% 🚩0.5m/s)\n\n최종 업데이트: 2026-05-1
- 6 06:17:31 (KST)
+ 6 09:04:50 (KST)
 LOCATION:우리집
 END:VEVENT
 BEGIN:VEVENT
@@ -93,61 +91,70 @@ DESCRIPTION:[00시] ☁️ 흐림 17°C (💧60% 🚩0.2m/s)\n[01시] ☁
  ⛅ 구름많음 24°C (💧45% 🚩1m/s)\n[21시] ☁️ 흐림 20°C (
  💧55% 🚩1m/s)\n[22시] ☁️ 흐림 20°C (💧55% 🚩1m/s)\n[23시]
   ☁️ 흐림 20°C (💧55% 🚩1m/s)\n\n최종 업데이트: 2026-05-16
-  06:17:31 (KST)
+  09:04:50 (KST)
 LOCATION:우리집
 END:VEVENT
 BEGIN:VEVENT
-SUMMARY:🌧️ 16/22°C
+SUMMARY:🌧️ 17/26°C
 DTSTART;VALUE=DATE:20260520
 DTEND;VALUE=DATE:20260521
 UID:20260520@mid
 DESCRIPTION:[오전] 🌧️ 흐리고 비 (☔60%)\n[오후] 🌧️ 흐
- 리고 비 (☔60%)\n\n최종 업데이트: 2026-05-16 06:17:31 (KST)
+ 리고 비 (☔60%)\n\n최종 업데이트: 2026-05-16 09:04:50 (KST)
 LOCATION:우리집
 END:VEVENT
 BEGIN:VEVENT
-SUMMARY:⛅ 16/24°C
+SUMMARY:⛅ 16/27°C
 DTSTART;VALUE=DATE:20260521
 DTEND;VALUE=DATE:20260522
 UID:20260521@mid
 DESCRIPTION:[오전] ☁️ 흐림 (☔40%)\n[오후] ⛅ 구름많음 (
- ☔30%)\n\n최종 업데이트: 2026-05-16 06:17:31 (KST)
+ ☔30%)\n\n최종 업데이트: 2026-05-16 09:04:50 (KST)
 LOCATION:우리집
 END:VEVENT
 BEGIN:VEVENT
-SUMMARY:⛅ 15/26°C
+SUMMARY:⛅ 16/28°C
 DTSTART;VALUE=DATE:20260522
 DTEND;VALUE=DATE:20260523
 UID:20260522@mid
 DESCRIPTION:[오전] ⛅ 구름많음 (☔20%)\n[오후] ⛅ 구름많음 
- (☔20%)\n\n최종 업데이트: 2026-05-16 06:17:31 (KST)
+ (☔20%)\n\n최종 업데이트: 2026-05-16 09:04:50 (KST)
 LOCATION:우리집
 END:VEVENT
 BEGIN:VEVENT
-SUMMARY:⛅ 15/26°C
+SUMMARY:⛅ 15/25°C
 DTSTART;VALUE=DATE:20260523
 DTEND;VALUE=DATE:20260524
 UID:20260523@mid
-DESCRIPTION:[종일] ⛅ 구름많음 (☔20%)\n\n최종 업데이트: 202
- 6-05-16 06:17:31 (KST)
-LOCATION:우리집
-END:VEVENT
-BEGIN:VEVENT
-SUMMARY:⛅ 15/26°C
-DTSTART;VALUE=DATE:20260524
-DTEND;VALUE=DATE:20260525
-UID:20260524@mid
-DESCRIPTION:[종일] ⛅ 구름많음 (☔20%)\n\n최종 업데이트: 202
- 6-05-16 06:17:31 (KST)
+DESCRIPTION:[오전] ⛅ 구름많음 (☔20%)\n[오후] ⛅ 구름많음 
+ (☔20%)\n\n최종 업데이트: 2026-05-16 09:04:50 (KST)
 LOCATION:우리집
 END:VEVENT
 BEGIN:VEVENT
 SUMMARY:☀️ 15/27°C
+DTSTART;VALUE=DATE:20260524
+DTEND;VALUE=DATE:20260525
+UID:20260524@mid
+DESCRIPTION:[종일] ☀️ 맑음 (☔10%)\n\n최종 업데이트: 2026-0
+ 5-16 09:04:50 (KST)
+LOCATION:우리집
+END:VEVENT
+BEGIN:VEVENT
+SUMMARY:☀️ 15/28°C
 DTSTART;VALUE=DATE:20260525
 DTEND;VALUE=DATE:20260526
 UID:20260525@mid
 DESCRIPTION:[종일] ☀️ 맑음 (☔10%)\n\n최종 업데이트: 2026-0
- 5-16 06:17:31 (KST)
+ 5-16 09:04:50 (KST)
+LOCATION:우리집
+END:VEVENT
+BEGIN:VEVENT
+SUMMARY:☀️ 15/29°C
+DTSTART;VALUE=DATE:20260526
+DTEND;VALUE=DATE:20260527
+UID:20260526@mid
+DESCRIPTION:[종일] ☀️ 맑음 (☔10%)\n\n최종 업데이트: 2026-0
+ 5-16 09:04:50 (KST)
 LOCATION:우리집
 END:VEVENT
 END:VCALENDAR
