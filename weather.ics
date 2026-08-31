@@ -2,24 +2,6 @@ BEGIN:VCALENDAR
 X-WR-CALNAME:기상청 날씨
 X-WR-TIMEZONE:Asia/Seoul
 BEGIN:VEVENT
-SUMMARY:🌧️ 22°C/24°C
-DTSTART;VALUE=DATE:20260831
-DTEND;VALUE=DATE:20260901
-UID:20260831@short_summary
-DESCRIPTION:[11시] 🌧️ 비 23°C (☔60% 💧95% 🚩1.6m/s)\n[12시]
-  🌧️ 비 23°C (☔60% 💧95% 🚩1.8m/s)\n[13시] 🌧️ 비 23°C 
- (☔60% 💧95% 🚩1.6m/s)\n[14시] 🌧️ 비 24°C (☔60% 💧95% 
- 🚩0.8m/s)\n[15시] 🌧️ 비 24°C (☔60% 💧95% 🚩0.8m/s)\n[16시
- ] 🌧️ 비 24°C (☔60% 💧95% 🚩1m/s)\n[17시] 🌧️ 비 23°C (
- ☔60% 💧95% 🚩0.8m/s)\n[18시] ☁️ 흐림 23°C (💧95% 🚩0.8m/
- s)\n[19시] ☁️ 흐림 23°C (💧95% 🚩0.7m/s)\n[20시] ☁️ 흐
- 림 23°C (💧95% 🚩0.4m/s)\n[21시] ☁️ 흐림 22°C (💧95% 🚩0
- .6m/s)\n[22시] 🌧️ 비 22°C (☔60% 💧95% 🚩0.8m/s)\n[23시] 
- 🌧️ 비 22°C (☔60% 💧100% 🚩0.3m/s)\n\n최종 업데이트: 202
- 6-08-31 10:21:45 (KST)
-LOCATION:우리집
-END:VEVENT
-BEGIN:VEVENT
 SUMMARY:🌧️ 21°C/28°C
 DTSTART;VALUE=DATE:20260901
 DTEND;VALUE=DATE:20260902
